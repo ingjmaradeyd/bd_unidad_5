@@ -1,0 +1,5 @@
+label,collection,nReturned,executionTimeMillis,totalKeysExamined,totalDocsExamined,efficiency_ratio_docs_per_return
+ESR_orders_delivered_sort_purchase,orders,96478,418.0,96478.0,96478.0,1.0
+partial_index_products_category_weight,products_catalog,3025,56.0,0.0,32951.0,10.8929
+full_text_products_search,products_catalog,0,2.0,0.0,0.0,0.0
+aggregation_sales_by_category_optimized,orders,20,,,,

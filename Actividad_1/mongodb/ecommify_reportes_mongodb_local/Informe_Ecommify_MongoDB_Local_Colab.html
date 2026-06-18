@@ -1,0 +1,509 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<title>Informe Ecommify MongoDB Local Colab</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 40px; }
+h1, h2 { color: #1f4e79; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+<h1>Informe Ecommify - Actividad 1 MongoDB Local en Google Colab</h1>
+
+<h2>Resumen Ejecutivo</h2>
+<p>Se creó una base de datos MongoDB local dentro de Google Colab para la plataforma Ecommify. 
+El notebook cargó datos desde Google Drive, creó colecciones documentales, implementó índices compuestos, parciales y de texto, 
+ejecutó consultas con explain executionStats, desarrolló pipelines de agregación y generó evidencias cuantitativas.</p>
+
+<h2>Conteos de Fuente</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>fuente</th>
+      <th>registros</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>customers</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>geolocation</td>
+      <td>1000163</td>
+    </tr>
+    <tr>
+      <td>order_items</td>
+      <td>112650</td>
+    </tr>
+    <tr>
+      <td>order_payments</td>
+      <td>103886</td>
+    </tr>
+    <tr>
+      <td>order_reviews</td>
+      <td>99224</td>
+    </tr>
+    <tr>
+      <td>orders</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>products</td>
+      <td>32951</td>
+    </tr>
+    <tr>
+      <td>sellers</td>
+      <td>3095</td>
+    </tr>
+    <tr>
+      <td>category_translation</td>
+      <td>71</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Conteos en MongoDB Local</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>coleccion</th>
+      <th>documentos</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>customers</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>geolocation</td>
+      <td>1000163</td>
+    </tr>
+    <tr>
+      <td>order_items</td>
+      <td>112650</td>
+    </tr>
+    <tr>
+      <td>order_payments</td>
+      <td>103886</td>
+    </tr>
+    <tr>
+      <td>order_reviews</td>
+      <td>99224</td>
+    </tr>
+    <tr>
+      <td>orders</td>
+      <td>99441</td>
+    </tr>
+    <tr>
+      <td>products_catalog</td>
+      <td>32951</td>
+    </tr>
+    <tr>
+      <td>sellers</td>
+      <td>3095</td>
+    </tr>
+    <tr>
+      <td>category_translation</td>
+      <td>71</td>
+    </tr>
+    <tr>
+      <td>analytics_results</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Índices Implementados</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>collection</th>
+      <th>index_name</th>
+      <th>key</th>
+      <th>partialFilterExpression</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>orders</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>orders</td>
+      <td>idx_orders_esr_status_purchase_estimated</td>
+      <td>SON([('order_status', 1), ('order_purchase_timestamp', -1), ('order_estimated_delivery_date', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>orders</td>
+      <td>idx_orders_order_id</td>
+      <td>SON([('order_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>order_items</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>order_items</td>
+      <td>idx_order_items_order_product_seller</td>
+      <td>SON([('order_id', 1), ('product_id', 1), ('seller_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>products_catalog</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>products_catalog</td>
+      <td>idx_products_category_weight_partial</td>
+      <td>SON([('product_category_name', 1), ('product_weight_g', 1)])</td>
+      <td>SON([('product_category_name', SON([('$type', 'string')])), ('product_weight_g', SON([('$gt', 0)]))])</td>
+    </tr>
+    <tr>
+      <td>products_catalog</td>
+      <td>idx_products_full_text_category</td>
+      <td>SON([('_fts', 'text'), ('_ftsx', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>products_catalog</td>
+      <td>idx_products_product_id</td>
+      <td>SON([('product_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>order_reviews</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>order_reviews</td>
+      <td>idx_reviews_score_creation</td>
+      <td>SON([('review_score', 1), ('review_creation_date', -1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>customers</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>customers</td>
+      <td>idx_customers_customer_id</td>
+      <td>SON([('customer_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>sellers</td>
+      <td>_id_</td>
+      <td>SON([('_id', 1)])</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>sellers</td>
+      <td>idx_sellers_seller_id</td>
+      <td>SON([('seller_id', 1)])</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Métricas de Rendimiento</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>label</th>
+      <th>collection</th>
+      <th>nReturned</th>
+      <th>executionTimeMillis</th>
+      <th>totalKeysExamined</th>
+      <th>totalDocsExamined</th>
+      <th>efficiency_ratio_docs_per_return</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ESR_orders_delivered_sort_purchase</td>
+      <td>orders</td>
+      <td>96478</td>
+      <td>418.0</td>
+      <td>96478.0</td>
+      <td>96478.0</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <td>partial_index_products_category_weight</td>
+      <td>products_catalog</td>
+      <td>3025</td>
+      <td>56.0</td>
+      <td>0.0</td>
+      <td>32951.0</td>
+      <td>10.8929</td>
+    </tr>
+    <tr>
+      <td>full_text_products_search</td>
+      <td>products_catalog</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>aggregation_sales_by_category_optimized</td>
+      <td>orders</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Top Ventas por Categoría</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>items_sold</th>
+      <th>category</th>
+      <th>orders_count</th>
+      <th>total_sales</th>
+      <th>avg_price</th>
+      <th>total_freight</th>
+      <th>gross_value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>9465</td>
+      <td>health_beauty</td>
+      <td>8647</td>
+      <td>1233131.72</td>
+      <td>130.28</td>
+      <td>178957.81</td>
+      <td>1412089.53</td>
+    </tr>
+    <tr>
+      <td>5859</td>
+      <td>watches_gifts</td>
+      <td>5495</td>
+      <td>1166176.98</td>
+      <td>199.04</td>
+      <td>98156.14</td>
+      <td>1264333.12</td>
+    </tr>
+    <tr>
+      <td>10953</td>
+      <td>bed_bath_table</td>
+      <td>9272</td>
+      <td>1023434.76</td>
+      <td>93.44</td>
+      <td>201774.50</td>
+      <td>1225209.26</td>
+    </tr>
+    <tr>
+      <td>8431</td>
+      <td>sports_leisure</td>
+      <td>7530</td>
+      <td>954852.55</td>
+      <td>113.25</td>
+      <td>163404.36</td>
+      <td>1118256.91</td>
+    </tr>
+    <tr>
+      <td>7644</td>
+      <td>computers_accessories</td>
+      <td>6530</td>
+      <td>888724.61</td>
+      <td>116.26</td>
+      <td>143999.16</td>
+      <td>1032723.77</td>
+    </tr>
+    <tr>
+      <td>8160</td>
+      <td>furniture_decor</td>
+      <td>6307</td>
+      <td>711927.69</td>
+      <td>87.25</td>
+      <td>168402.23</td>
+      <td>880329.92</td>
+    </tr>
+    <tr>
+      <td>6795</td>
+      <td>housewares</td>
+      <td>5743</td>
+      <td>615628.69</td>
+      <td>90.60</td>
+      <td>142763.56</td>
+      <td>758392.25</td>
+    </tr>
+    <tr>
+      <td>3718</td>
+      <td>cool_stuff</td>
+      <td>3559</td>
+      <td>610204.10</td>
+      <td>164.12</td>
+      <td>81476.79</td>
+      <td>691680.89</td>
+    </tr>
+    <tr>
+      <td>4140</td>
+      <td>auto</td>
+      <td>3810</td>
+      <td>578966.65</td>
+      <td>139.85</td>
+      <td>90488.10</td>
+      <td>669454.75</td>
+    </tr>
+    <tr>
+      <td>4268</td>
+      <td>garden_tools</td>
+      <td>3448</td>
+      <td>470495.28</td>
+      <td>110.24</td>
+      <td>96650.40</td>
+      <td>567145.68</td>
+    </tr>
+    <tr>
+      <td>4030</td>
+      <td>toys</td>
+      <td>3804</td>
+      <td>471286.48</td>
+      <td>116.94</td>
+      <td>75774.58</td>
+      <td>547061.06</td>
+    </tr>
+    <tr>
+      <td>2982</td>
+      <td>baby</td>
+      <td>2809</td>
+      <td>400421.84</td>
+      <td>134.28</td>
+      <td>66305.81</td>
+      <td>466727.65</td>
+    </tr>
+    <tr>
+      <td>3340</td>
+      <td>perfumery</td>
+      <td>3086</td>
+      <td>390144.65</td>
+      <td>116.81</td>
+      <td>53026.98</td>
+      <td>443171.63</td>
+    </tr>
+    <tr>
+      <td>4430</td>
+      <td>telephony</td>
+      <td>4093</td>
+      <td>309860.23</td>
+      <td>69.95</td>
+      <td>69342.39</td>
+      <td>379202.62</td>
+    </tr>
+    <tr>
+      <td>1668</td>
+      <td>office_furniture</td>
+      <td>1254</td>
+      <td>268154.31</td>
+      <td>160.76</td>
+      <td>67057.05</td>
+      <td>335211.36</td>
+    </tr>
+    <tr>
+      <td>2466</td>
+      <td>stationery</td>
+      <td>2264</td>
+      <td>223788.69</td>
+      <td>90.75</td>
+      <td>45786.36</td>
+      <td>269575.05</td>
+    </tr>
+    <tr>
+      <td>1924</td>
+      <td>pet_shop</td>
+      <td>1688</td>
+      <td>211695.64</td>
+      <td>110.03</td>
+      <td>38918.56</td>
+      <td>250614.20</td>
+    </tr>
+    <tr>
+      <td>199</td>
+      <td>computers</td>
+      <td>177</td>
+      <td>218684.14</td>
+      <td>1098.92</td>
+      <td>9665.62</td>
+      <td>228349.76</td>
+    </tr>
+    <tr>
+      <td>651</td>
+      <td>musical_instruments</td>
+      <td>611</td>
+      <td>184315.74</td>
+      <td>283.13</td>
+      <td>17871.38</td>
+      <td>202187.12</td>
+    </tr>
+    <tr>
+      <td>2729</td>
+      <td>electronics</td>
+      <td>2517</td>
+      <td>155043.93</td>
+      <td>56.81</td>
+      <td>45679.16</td>
+      <td>200723.09</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Simulación de Sharding</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>simulated_shard</th>
+      <th>documents</th>
+      <th>percentage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>33215</td>
+      <td>33.40</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>33217</td>
+      <td>33.40</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>33009</td>
+      <td>33.19</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Conclusión</h2>
+<p>La implementación cumple los componentes técnicos de la actividad: creación de base documental, carga de datos, 
+índices ESR, índices parciales, búsqueda full-text, aggregation pipeline de más de cinco etapas, uso de allowDiskUse, 
+medición con explain y documentación teórica de sharding/replica set.</p>
+</body>
+</html>
